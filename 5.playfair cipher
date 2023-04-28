@@ -1,0 +1,58 @@
+import string
+
+def create_playfair_matrix(key):
+    # Create a list of all the letters in the key and the remaining letters of the alphabet
+    alphabet = string.ascii_lowercase.replace("j", "")
+    letters = [letter for letter in key.lower() + alphabet if letter not in key.lower()]
+
+    # Initialize the 5x5 matrix with zeros
+    matrix = [[0 for i in range(5)] for j in range(5)]
+
+    # Populate the matrix with the letters
+    for i in range(5):
+        for j in range(5):
+            matrix[i][j] = letters[i * 5 + j]
+
+    return matrix
+
+def encrypt(plaintext, key):
+    # Remove spaces and convert to lowercase
+    plaintext = plaintext.replace(" ", "").lower()
+
+    # Create the Playfair matrix
+    matrix = create_playfair_matrix(key)
+
+    # Split the plaintext into pairs of letters
+    pairs = [plaintext[i:i+2] for i in range(0, len(plaintext), 2)]
+    if pairs[-1] != 2:
+        pairs[-1] += "x"
+
+    # Encrypt each pair of letters
+    ciphertext = ""
+    for pair in pairs:
+        # Get the row and column of each letter in the matrix
+        r1, c1 = divmod(matrix.index([x for x in matrix if pair[0] in x][0]), 5)
+        r2, c2 = divmod(matrix.index([x for x in matrix if pair[1] in x][0]), 5)
+
+        # If the letters are in the same row, wrap around to the other end of the row
+        if r1 == r2:
+            ciphertext += matrix[r1][(c1 + 1) % 5]
+            ciphertext += matrix[r2][(c2 + 1) % 5]
+        # If the letters are in the same column, wrap around to the other end of the column
+        elif c1 == c2:
+            ciphertext += matrix[(r1 + 1) % 5][c1]
+            ciphertext += matrix[(r2 + 1) % 5][c2]
+        # If the letters are not in the same row or column, form a rectangle and use the opposite corners
+        else:
+            ciphertext += matrix[r1][c2]
+            ciphertext += matrix[r2][c1]
+
+    return ciphertext
+
+plaintext = "the quick brown fox jumps over the lazy dog"
+key = "playfair example"
+
+ciphertext = encrypt(plaintext, key)
+
+print("Plaintext: ", plaintext)
+print("Ciphertext:", ciphertext)
